@@ -1,0 +1,79 @@
+/* Ultimate Chess - style.css A large, feature-rich stylesheet for the Ultimate Chess project. Author: Generated for Shreyas Notes: - Multiple board themes (classic, glass, neon, minimal) - Piece styles (SVG, letters, emoji) hook classes - Responsive layout rules and accessibility styles - Animations for moves, captures, highlights, and UI micro-interactions - Plenty of comments and utility classes for future expansion */
+
+:root{ /* Colors / --bg-0: #071029; / deepest / --bg-1: #0f172a; --panel: rgba(255,255,255,0.03); --muted: rgba(255,255,255,0.65); --accent: #7dd3fc; / cyan / --accent-2: #60a5fa; / blue */ --gold: #f59e0b; --success: #16a34a; --danger: #ef4444;
+
+/* Board colors (default minimal) */ --light-square: #f5f7fc; --dark-square: #2b3a56;
+
+/* Sizes / --board-size: 720px; / changes on mobile via media queries */ --square-gap: 0px; --radius: 12px; --ui-gap: 12px; --shadow-1: 0 8px 30px rgba(2,6,23,0.7); --glass-opa: 0.06;
+
+/* Typography */ --ff-heading: 'Nunito', system-ui, -apple-system, 'Segoe UI', Roboto, Arial; --ff-base: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial; }
+
+/* Dark theme base */ *{box-sizing:border-box} html,body{height:100%;margin:0;font-family:var(--ff-base);background:linear-gradient(180deg,var(--bg-1),var(--bg-0));color:#e6eef8;-webkit-font-smoothing:antialiased} .app{min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:28px;gap:20px}
+
+/* Header */ header{width:100%;max-width:1200px;display:flex;align-items:center;justify-content:space-between} .brand{display:flex;align-items:center;gap:14px} .brand h1{font-family:var(--ff-heading);font-weight:800;margin:0;font-size:20px} .brand small{display:block;color:var(--muted);font-size:12px}
+
+/* Button base */ .btn{cursor:pointer;border:0;padding:10px 12px;border-radius:10px;font-weight:700} .btn:active{transform:translateY(1px)} .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)} .btn.primary{background:linear-gradient(180deg,var(--accent-2),var(--accent));color:#032;}
+
+/* Layout */ main{width:100%;max-width:1200px;display:grid;grid-template-columns:1fr 360px;gap:18px} .play-area{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow-1)} .board-wrap{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap} .board-container{background:var(--panel);padding:12px;border-radius:12px;display:grid;gap:10px}
+
+/* Chess board */ .chess-board{width:var(--board-size);height:var(--board-size);display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);border-radius:10px;overflow:hidden;position:relative;box-shadow:inset 0 0 0 1px rgba(255,255,255,0.02)}
+
+.square{position:relative;display:flex;align-items:center;justify-content:center;font-size:28px;user-select:none;transition:background 180ms, transform 120ms} .square::after{content:'';position:absolute;inset:0;border-radius:6px;pointer-events:none;transition:opacity 160ms} .square.light{background:var(--light-square);color:#0b1220} .square.dark{background:var(--dark-square);color:#f7fbff}
+
+/* pieces container */ .piece{width:86%;height:86%;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:8px;transition:transform 160ms} .piece:active{transform:scale(0.98)}
+
+/* piece styles depending on piece style selector */ .pieces-style-alpha .piece{font-size:22px;font-weight:800} .pieces-style-emoji .piece{font-size:32px} .pieces-style-svg .piece img{width:86%;height:86%;object-fit:contain}
+
+/* Coordinates along edges (a..h & 1..8) */ .coords{display:flex;gap:6px;margin-top:8px;font-size:13px;color:var(--muted)}
+
+/* Square highlights for legal moves */ .legal-hint{position:absolute;inset:10%;border-radius:50%;background:rgba(125,211,252,0.16);pointer-events:none} .legal-capture{position:absolute;inset:6%;border-radius:10%;background:linear-gradient(180deg, rgba(239,68,68,0.12), rgba(239,68,68,0.06));pointer-events:none}
+
+/* last-move markers */ .last-move{box-shadow:inset 0 0 0 4px rgba(249,115,22,0.06)} .highlight{outline:4px solid rgba(125,211,252,0.18);box-shadow:0 10px 30px rgba(125,211,252,0.06) inset}
+
+/* captured piece fade */ .piece-captured{animation:captureFade 420ms forwards} @keyframes captureFade{from{transform:scale(1);opacity:1}to{transform:scale(0.5) translateY(-12px);opacity:0}}
+
+/* Dragging */ .dragging{position:fixed;pointer-events:none;z-index:600;transform:translate(-50%,-50%);width:68px;height:68px}
+
+/* Board themes / / minimal is default (root variables) */ .board-theme-classic .square.light{background:linear-gradient(180deg,#f1e0c6,#e6d2b0)} .board-theme-classic .square.dark{background:linear-gradient(180deg,#6b4f2b,#3e2a12)}
+
+.board-theme-glass{--glass-a:rgba(255,255,255,var(--glass-opa));} .board-theme-glass .chess-board{backdrop-filter: blur(6px);} .board-theme-glass .square.light{background:linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));} .board-theme-glass .square.dark{background:linear-gradient(180deg, rgba(0,0,0,0.28), rgba(0,0,0,0.36));}
+
+.board-theme-neon .square.light{background:linear-gradient(180deg,#f3f4f6,#e6f7ff);} .board-theme-neon .square.dark{background:linear-gradient(180deg,#061826,#0b2440);} .board-theme-neon .square.light .piece{filter:drop-shadow(0 10px 30px rgba(125,211,252,0.12))}
+
+/* Neon glow when selecting */ .board-theme-neon .highlight{outline:6px solid rgba(124,58,237,0.18)}
+
+/* UI: sidebars */ .sidebar{background:var(--panel);padding:16px;border-radius:10px;color:inherit;box-shadow:0 8px 28px rgba(2,6,23,0.5)} .panel h2{margin:0 0 8px 0} .turn-indicator{display:flex;gap:10px;align-items:center} .player-chip{display:flex;flex-direction:column;align-items:center;padding:8px;border-radius:10px;background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);min-width:110px}
+
+/* Move history */ .history{max-height:280px;overflow:auto;padding:8px;background:rgba(255,255,255,0.02);border-radius:8px} .history ol{margin:0;padding:0 12px} .history li{margin:8px 0;font-size:14px}
+
+/* Controls area */ .controls{display:flex;flex-direction:column;gap:8px} .controls .row{display:flex;gap:8px}
+
+/* Responsive */ @media (max-width:980px){ main{grid-template-columns:1fr} .chess-board{--board-size:calc(100vw - 48px);width:100%;height:auto;aspect-ratio:1} .sidebar{position:relative;top:unset} }
+
+/* Accessibility focus */ .square:focus{outline:3px solid rgba(96,165,250,0.18);z-index:3} .btn:focus{outline:3px solid rgba(125,211,252,0.14)}
+
+/* Small utilities and helpers */ .flex{display:flex} .center{display:grid;place-items:center} .muted{color:var(--muted)} .mt-8{margin-top:8px} .p-8{padding:8px}
+
+/* Animations for board entry */ .fade-in{animation:fadeIn .7s cubic-bezier(.2,.9,.3,1) both} @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* Fancy piece entrance */ .piece-appear{animation:popIn 260ms cubic-bezier(.2,.9,.3,1) both} @keyframes popIn{from{opacity:0;transform:scale(0.6)}to{opacity:1;transform:none}}
+
+/* Move animation: slide-to-target class will be set inline by JS with transform */ .move-smooth{transition:transform 240ms cubic-bezier(.2,.9,.3,1)}
+
+/* PGN import/export modal */ .modal-backdrop{position:fixed;inset:0;background:rgba(2,6,23,0.7);display:grid;place-items:center;z-index:500} .modal{width:min(780px,94vw);background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);border-radius:12px;padding:18px} .modal textarea{width:100%;min-height:160px;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+
+/* Tooltips */ .tooltip{position:relative} .tooltip[data-tip]:hover:after{content:attr(data-tip);position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#062024;color:#dff8ff;padding:6px 8px;border-radius:6px;font-size:12px;white-space:nowrap}
+
+/* Small-board preview (for mobile) */ .small-preview{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;width:160px;height:160px;border-radius:8px;overflow:hidden} .small-preview .sq{width:100%;height:100%;display:grid;place-items:center}
+
+/* When game ends */ .game-end-banner{position:fixed;left:50%;top:10%;transform:translateX(-50%);background:linear-gradient(90deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02));padding:16px 22px;border-radius:12px;box-shadow:0 12px 46px rgba(2,6,23,0.6);z-index:700}
+
+/* Detailed theme tweaks — fancy gradients for pieces if SVG not used */ .pieces-style-alpha .white-piece{color:#fff;background:linear-gradient(180deg,#fff,#e9f6ff);} .pieces-style-alpha .black-piece{color:#0b1220;background:linear-gradient(180deg,#1f2937,#111827);}
+
+/* Board coordinates (letters & numbers) positioned around board — JS may toggle these on/off */ .board-coords{position:absolute;inset:0;pointer-events:none} .board-coords .file{position:absolute;bottom:-28px;left:0;display:flex;width:100%;justify-content:space-between;padding:0 6px} .board-coords .rank{position:absolute;left:-28px;top:0;display:flex;flex-direction:column;height:100%;justify-content:space-between;padding:6px 0} .board-coords .coord{font-size:12px;color:var(--muted)}
+
+/* long comments / next utilities (for future JS hooks) / / large set of CSS variables for easy theming adjustments */ :root{ --white-piece-shadow: 0 8px 22px rgba(2,6,23,0.5); --black-piece-shadow: 0 8px 28px rgba(0,0,0,0.6); }
+
+/* Example: check highlighting on king square */ .king-in-check{outline:5px solid rgba(239,68,68,0.18);box-shadow:0 12px 40px rgba(239,68,68,0.06) inset}
+
+/* End notes: additional spacing rules and print styles */ @media print{body{background:#fff;color:#000} .chess-board{box-shadow:none} }
