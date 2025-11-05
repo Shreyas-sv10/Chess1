@@ -1,0 +1,255 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ultimate Chess — Shreyas' Beautiful Chess</title>
+  <!--
+    This HTML file is intentionally large and feature-rich.
+    It includes a polished layout, accessible controls, SVG icons, theme hooks, and
+    many markup hooks for the CSS & JS files we'll add next.Next steps: I'll add a large, modern CSS file (style.css) with animations,
+and then a detailed script.js with full chess logic (legal moves, check/checkmate,
+move history, undo/redo, optional AI later).
+
+-->
+
+  <!-- Google Fonts (will work when online) -->  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Nunito:wght@400;700&display=swap" rel="stylesheet">  <!-- Fallback: inline base styles and CSS variables that the external stylesheet will expand on -->  <style>
+    :root{
+      --bg: linear-gradient(180deg, #0f172a 0%, #071029 100%);
+      --panel: rgba(255,255,255,0.03);
+      --muted: rgba(255,255,255,0.6);
+      --accent: #7dd3fc;
+      --gold: #f59e0b;
+      --glass: rgba(255,255,255,0.04);
+      --radius: 14px;
+      --board-size: 720px; /* desktop default, will be responsive */
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      color-scheme: dark;
+    }
+
+    html,body{height:100%;margin:0;padding:0;background:var(--bg);color:#e6eef8}
+    .app{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:22px;padding:30px}
+    header{width:100%;max-width:1200px;display:flex;align-items:center;justify-content:space-between}
+    h1{font-weight:800;letter-spacing:0.4px;margin:0;font-size:22px}
+    .brand{display:flex;align-items:center;gap:14px}
+    .logo{width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,#111827,#0ea5a6);display:grid;place-items:center;box-shadow:0 6px 30px rgba(3,7,18,0.6)}
+    .logo svg{width:34px;height:34px}
+
+    main{width:100%;max-width:1200px;display:grid;grid-template-columns: 1fr 360px;gap:24px}
+
+    /* Chess area */
+    .play-area{background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);border-radius:var(--radius);padding:20px;box-shadow:0 8px 40px rgba(2,6,23,0.6)}
+    .board-wrap{display:flex;gap:18px;align-items:flex-start;flex-wrap:wrap}
+
+    /* Board container */
+    .board-container{background:var(--panel);padding:12px;border-radius:12px;display:grid;grid-template-columns:1fr;gap:10px}
+    .board-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+    .game-title{font-weight:700}
+
+    /* Chessboard grid */
+    .chess-board{width:var(--board-size);height:var(--board-size);display:grid;grid-template-columns:repeat(8,1fr);grid-template-rows:repeat(8,1fr);border-radius:10px;overflow:hidden;box-shadow:inset 0 0 0 2px rgba(255,255,255,0.02)}
+    .square{position:relative;display:flex;align-items:center;justify-content:center;font-size:28px;user-select:none}
+    .square.light{background:linear-gradient(180deg,#f5f7fc 0%, #e9eef8 100%);color:#0b1220}
+    .square.dark{background:linear-gradient(180deg,#3b4b6b 0%, #2b3a56 100%);color:#f7fbff}
+    .square .piece{width:78%;height:78%;display:flex;align-items:center;justify-content:center;cursor:pointer;filter:drop-shadow(0 8px 24px rgba(2,6,23,0.6))}
+
+    /* Coordinates on edges */
+    .coords{display:flex;gap:6px;margin-top:6px;font-size:13px;color:var(--muted)}
+
+    /* Info panel */
+    .sidebar{background:var(--panel);padding:18px;border-radius:12px;position:sticky;top:28px;height:fit-content;box-shadow:0 10px 30px rgba(2,6,23,0.45)}
+    .panel h2{margin:0 0 8px 0}
+    .turn-indicator{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+    .player-chip{display:flex;flex-direction:column;align-items:center;padding:8px;border-radius:12px;background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);min-width:120px}
+
+    /* controls */
+    .controls{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+    .btn{background:linear-gradient(180deg,#0ea5a6,#0284c7);padding:10px 12px;border-radius:10px;border:none;color:#031124;font-weight:700;cursor:pointer}
+    .btn.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+
+    /* move history */
+    .history{max-height:260px;overflow:auto;padding:8px;background:rgba(255,255,255,0.02);border-radius:10px}
+    .history ol{margin:0;padding:0 8px 0 18px}
+    .history li{margin:6px 0;font-size:14px}
+
+    /* small screens */
+    @media (max-width:980px){
+      main{grid-template-columns:1fr;}
+      .chess-board{--board-size:calc(100vw - 48px);width:100%;height:auto;aspect-ratio:1}
+      .sidebar{position:relative;top:unset}
+    }
+
+    /* subtle animations */
+    .fade-in{animation:fadeIn .7s ease both}
+    @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+    /* a few helper classes for JS to toggle */
+    .highlight{outline:4px solid rgba(125,211,252,0.24);box-shadow:0 10px 30px rgba(125,211,252,0.06) inset}
+    .last-move{background:linear-gradient(90deg, rgba(245,158,11,0.16), rgba(125,211,252,0.06))}
+
+    /* nice footer */
+    footer{width:100%;max-width:1200px;text-align:center;padding:6px 0;color:var(--muted);font-size:13px}
+  </style></head>
+<body>
+  <div class="app"><header>
+  <div class="brand">
+    <div class="logo" aria-hidden="true">
+      <!-- chess knight SVG -->
+      <svg viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M128 128c0 0 96-48 192 0" stroke="white" stroke-opacity="0.9" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="190" cy="210" r="18" fill="white" fill-opacity="0.95" />
+      </svg>
+    </div>
+    <div>
+      <h1>Ultimate Chess</h1>
+      <div style="font-size:12px;color:var(--muted)">Beautiful, responsive, and full-featured — built for Shreyas</div>
+    </div>
+  </div>
+
+  <nav style="display:flex;gap:8px;align-items:center">
+    <button class="btn ghost" id="themeToggle" aria-pressed="false">Toggle Theme</button>
+    <button class="btn" id="newGameBtn">New Game</button>
+  </nav>
+</header>
+
+
+<main>
+  <!-- PLAY AREA -->
+  <section class="play-area fade-in">
+    <div class="board-wrap">
+      <div class="board-container" style="flex:1;min-width:320px">
+        <div class="board-top">
+          <div>
+            <div class="game-title">Classic Match</div>
+            <div style="font-size:13px;color:var(--muted);margin-top:6px">Standard rules · 2 players · 60 min friendly</div>
+          </div>
+
+          <div style="display:flex;gap:8px;align-items:center">
+            <div style="text-align:right;font-size:13px;color:var(--muted)">
+              <div id="whiteClock">White: 00:10:00</div>
+              <div id="blackClock">Black: 00:10:00</div>
+            </div>
+            <div style="width:58px;height:58px;border-radius:10px;background:linear-gradient(180deg,#0f172a,#071029);display:grid;place-items:center;font-weight:700">
+              <div style="font-size:12px;color:var(--gold)">∞</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Chessboard grid -->
+        <div class="chess-board" id="chessBoard" role="grid" aria-label="Chessboard">
+          <!-- 64 squares will be inserted by JS or you can pre-place them here.
+               We'll add fallback markup for no-JS: a simple 8x8 table representation. -->
+          <!-- JS will generate the squares dynamically for easier management and to keep this HTML readable. -->
+        </div>
+
+        <!-- Coordinates for mobile view -->
+        <div class="coords" aria-hidden="true">
+          <div style="opacity:0.8">a</div><div>b</div><div>c</div><div>d</div><div>e</div><div>f</div><div>g</div><div>h</div>
+        </div>
+
+      </div>
+
+      <!-- Right of board: quick controls and status -->
+      <aside class="sidebar">
+        <div class="panel">
+          <h2>Game Status</h2>
+          <div class="turn-indicator">
+            <div class="player-chip" id="whiteInfo">
+              <div style="font-weight:800">White</div>
+              <div style="font-size:12px;color:var(--muted)">You</div>
+            </div>
+            <div class="player-chip" id="blackInfo">
+              <div style="font-weight:800">Black</div>
+              <div style="font-size:12px;color:var(--muted)">Opponent</div>
+            </div>
+          </div>
+
+          <div style="margin-top:8px">
+            <div style="font-size:13px;color:var(--muted)">Turn</div>
+            <div id="turnDisplay" style="font-weight:800;margin-top:6px">White to move</div>
+          </div>
+
+          <div class="controls">
+            <button class="btn" id="undoBtn">Undo Move</button>
+            <button class="btn ghost" id="redoBtn">Redo</button>
+            <button class="btn ghost" id="resignBtn">Resign</button>
+            <button class="btn ghost" id="offerDrawBtn">Offer Draw</button>
+          </div>
+
+          <div style="margin-top:12px">
+            <div style="font-size:13px;color:var(--muted)">Move History</div>
+            <div class="history" id="moveHistory" aria-live="polite">
+              <ol id="historyList">
+                <!-- Moves added here -->
+              </ol>
+            </div>
+          </div>
+
+          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn ghost" id="importBtn">Import PGN</button>
+            <button class="btn ghost" id="exportBtn">Export PGN</button>
+          </div>
+
+        </div>
+      </aside>
+    </div>
+
+    <!-- Game alerts / overlays -->
+    <div id="gameOverlay" style="display:none;position:fixed;inset:0;z-index:200;align-items:center;justify-content:center;">
+      <!-- overlay content created by JS when needed -->
+    </div>
+  </section>
+
+  <!-- RIGHT COLUMN: Settings / Themes / Analysis -->
+  <aside style="display:flex;flex-direction:column;gap:18px">
+    <div class="sidebar">
+      <h2>Settings</h2>
+
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:6px">
+        <label style="font-size:13px;color:var(--muted)">Board Theme</label>
+        <select id="themeSelect" style="padding:8px;border-radius:8px;background:transparent;color:inherit">
+          <option value="classic">Classic Wood</option>
+          <option value="glass">Glass</option>
+          <option value="neon">Neon</option>
+          <option value="minimal" selected>Minimal</option>
+        </select>
+
+        <label style="font-size:13px;color:var(--muted);margin-top:6px">Piece Style</label>
+        <select id="pieceSelect" style="padding:8px;border-radius:8px;background:transparent;color:inherit">
+          <option value="alpha">Alpha (letters)</option>
+          <option value="svg" selected>SVG (recommended)</option>
+          <option value="emoji">Emoji</option>
+        </select>
+
+        <label style="font-size:13px;color:var(--muted);margin-top:6px">Show Legal Hints</label>
+        <input type="checkbox" id="legalHints" checked />
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <h2>Analysis</h2>
+      <div style="font-size:13px;color:var(--muted);margin-top:6px">This panel will later show engine evaluation, best moves, and a small move tree.</div>
+      <div style="height:120px;background:rgba(255,255,255,0.02);border-radius:8px;margin-top:8px;padding:12px">Engine unavailable (add-on)</div>
+    </div>
+
+    <div class="sidebar">
+      <h2>About</h2>
+      <p style="font-size:13px;color:var(--muted)">Built with love and lots of JavaScript. This project is structured so the board and state live in script.js; CSS (style.css) will contain advanced styling and animations.</p>
+      <p style="font-size:12px;color:var(--muted)">License: MIT — modify freely for projects and learning.</p>
+    </div>
+
+  </aside>
+</main>
+
+<footer>
+  <div>© Shreyas — Ultimate Chess. Use on GitHub Pages or locally. Next: CSS (style.css) and then script.js (game logic).</div>
+</footer>
+
+  </div>  <!-- Placeholder: link to external script file we'll add next. We intentionally keep JS out of this HTML file for clarity. -->  <script>
+    // Minimal no-JS fallback: if JS is disabled, show a friendly message.
+    (function(){
+      if(typeof window === 'undefined') return;
+      if(!('querySelector' in document)) return;
+      document.documentElement.classList.add('js-ready');
+    })();
+  </script></body>
+  </html>
